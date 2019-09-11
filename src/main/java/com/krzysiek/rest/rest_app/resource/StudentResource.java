@@ -1,24 +1,30 @@
 package com.krzysiek.rest.rest_app.resource;
 
+import com.fasterxml.jackson.databind.ser.FilterProvider;
+import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
+import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.krzysiek.rest.rest_app.entity.Student;
 import com.krzysiek.rest.rest_app.repository.IStudentRepository;
 import com.krzysiek.rest.rest_app.exception.ElementNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.hateoas.Link;
 import org.springframework.hateoas.Resource;
+
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.*;
 
 import org.springframework.hateoas.mvc.ControllerLinkBuilder;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.json.MappingJacksonValue;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.validation.Valid;
 import java.net.URI;
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 public class StudentResource {
@@ -30,16 +36,21 @@ public class StudentResource {
     private MessageSource messageSource;
 
     @GetMapping("/students")
-    public List<Student> getAllStudents() {
-        return studentRepository.findAll();
+    public MappingJacksonValue getAllStudents() {
+        List<Resource<Student>> studentResources = studentRepository.findAll().stream()
+                .map(this::createStudentResource)
+                .collect(Collectors.toList());
+        SimpleBeanPropertyFilter filter = SimpleBeanPropertyFilter.filterOutAllExcept("firstName", "secondName", "yearOfStudy");
+        return getStudentMappingJacksonValue(studentResources, filter);
     }
 
     @GetMapping("/students/{id}")
-    public Resource<Student> getStudentById(@PathVariable Long id) {
+    public MappingJacksonValue getStudentById(@PathVariable Long id) {
         Optional<Student> studentOptional = studentRepository.findById(id);
         checkStudentExists(id, studentOptional);
         Resource<Student> resource = createLinkToAllStudents(studentOptional.get());
-        return resource;
+        SimpleBeanPropertyFilter filter = SimpleBeanPropertyFilter.filterOutAllExcept("id","firstName", "secondName", "yearOfStudy", "birthday", "email");
+        return getStudentMappingJacksonValue(resource, filter);
     }
 
     @PostMapping("/students")
@@ -66,12 +77,28 @@ public class StudentResource {
         }
     }
 
-//    HATEOAS
+    //    HATEOAS
     private Resource<Student> createLinkToAllStudents(Student student) {
         Resource<Student> resource = new Resource<>(student);
         ControllerLinkBuilder linkToAllStudents = linkTo(methodOn(this.getClass()).getAllStudents());
-        resource.add(linkToAllStudents.withRel(messageSource.getMessage("all.students.link", null, LocaleContextHolder.getLocale())));
+        resource.add(linkToAllStudents.withRel(getTranslateMessage("all.students.link")));
         return resource;
+    }
+
+    private Resource<Student> createStudentResource(Student student) {
+        Link studentDetailsLink = linkTo(methodOn(this.getClass()).getStudentById(student.getId())).withRel(getTranslateMessage("details.students.link"));
+        return new Resource<>(student, studentDetailsLink);
+    }
+
+    private String getTranslateMessage(String message) {
+        return messageSource.getMessage(message, null, LocaleContextHolder.getLocale());
+    }
+
+    private MappingJacksonValue getStudentMappingJacksonValue(Object resource, SimpleBeanPropertyFilter filter) {
+        FilterProvider filterProvider = new SimpleFilterProvider().addFilter("StudentsFilter", filter);
+        MappingJacksonValue mappingJacksonValue = new MappingJacksonValue(resource);
+        mappingJacksonValue.setFilters(filterProvider);
+        return mappingJacksonValue;
     }
 
 }

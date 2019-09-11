@@ -1,5 +1,7 @@
 package com.krzysiek.rest.rest_app.entity;
 
+import com.fasterxml.jackson.annotation.JsonFilter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -14,6 +16,7 @@ import java.util.Date;
 @NoArgsConstructor
 @SequenceGenerator(name = "seq_student", initialValue = 100, allocationSize = 1)
 @ApiModel(description = "Details about student")
+@JsonFilter("StudentsFilter")
 public class Student {
 
     @Id
