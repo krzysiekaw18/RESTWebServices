@@ -2,7 +2,7 @@
   "swagger": "2.0",
   "info": {
     "description": "Documentation for simple REST app",
-    "version": "3.0",
+    "version": "1.4",
     "title": "University API",
     "termsOfService": "urn:tos",
     "contact": {
@@ -18,6 +18,10 @@
   "host": "localhost:8080",
   "basePath": "/",
   "tags": [
+    {
+      "name": "subject-resource",
+      "description": "Subject Resource"
+    },
     {
       "name": "student-resource",
       "description": "Student Resource"
@@ -1573,62 +1577,6 @@
         }
       }
     },
-    "/students/id/subjects": {
-      "post": {
-        "tags": [
-          "student-resource"
-        ],
-        "summary": "addNewSubjectToStudent",
-        "operationId": "addNewSubjectToStudentUsingPOST",
-        "consumes": [
-          "application/xml",
-          "application/json"
-        ],
-        "produces": [
-          "application/xml",
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "description": "id",
-            "required": true,
-            "type": "integer",
-            "format": "int64"
-          },
-          {
-            "in": "body",
-            "name": "subject",
-            "description": "subject",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/Subject"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "object"
-            }
-          },
-          "201": {
-            "description": "Created"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
-          },
-          "404": {
-            "description": "Not Found"
-          }
-        }
-      }
-    },
     "/students/{id}": {
       "get": {
         "tags": [
@@ -1758,9 +1706,333 @@
           }
         }
       }
+    },
+    "/students/{id}/subjects/{subjectName}": {
+      "put": {
+        "tags": [
+          "student-resource"
+        ],
+        "summary": "addSubjectToStudent",
+        "operationId": "addSubjectToStudentUsingPUT",
+        "consumes": [
+          "application/xml",
+          "application/json"
+        ],
+        "produces": [
+          "application/xml",
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "subjectName",
+            "in": "path",
+            "description": "subjectName",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object"
+            }
+          },
+          "201": {
+            "description": "Created"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "student-resource"
+        ],
+        "summary": "deleteSubjectStudent",
+        "operationId": "deleteSubjectStudentUsingDELETE",
+        "consumes": [
+          "application/xml",
+          "application/json"
+        ],
+        "produces": [
+          "application/xml",
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "subjectName",
+            "in": "path",
+            "description": "subjectName",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "204": {
+            "description": "No Content"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    },
+    "/subjects": {
+      "get": {
+        "tags": [
+          "subject-resource"
+        ],
+        "summary": "getAllSubjects",
+        "operationId": "getAllSubjectsUsingGET",
+        "consumes": [
+          "application/xml",
+          "application/json"
+        ],
+        "produces": [
+          "application/xml",
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Subject"
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "subject-resource"
+        ],
+        "summary": "addNewSubject",
+        "operationId": "addNewSubjectUsingPOST",
+        "consumes": [
+          "application/xml",
+          "application/json"
+        ],
+        "produces": [
+          "application/xml",
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "newSubject",
+            "description": "newSubject",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Subject"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object"
+            }
+          },
+          "201": {
+            "description": "Created"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/subjects/{id}": {
+      "get": {
+        "tags": [
+          "subject-resource"
+        ],
+        "summary": "getSubjectById",
+        "operationId": "getSubjectByIdUsingGET",
+        "consumes": [
+          "application/xml",
+          "application/json"
+        ],
+        "produces": [
+          "application/xml",
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/Resource«Subject»"
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "subject-resource"
+        ],
+        "summary": "deleteSubjectById",
+        "operationId": "deleteSubjectByIdUsingDELETE",
+        "consumes": [
+          "application/xml",
+          "application/json"
+        ],
+        "produces": [
+          "application/xml",
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "204": {
+            "description": "No Content"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    },
+    "/subjects/{subjectName}/students": {
+      "get": {
+        "tags": [
+          "subject-resource"
+        ],
+        "summary": "getAllStudentsForSubject",
+        "operationId": "getAllStudentsForSubjectUsingGET",
+        "consumes": [
+          "application/xml",
+          "application/json"
+        ],
+        "produces": [
+          "application/xml",
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "subjectName",
+            "in": "path",
+            "description": "subjectName",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/MappingJacksonValue"
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
     }
   },
   "definitions": {
+    "Resource«Subject»": {
+      "type": "object",
+      "properties": {
+        "links": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Link"
+          }
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of subject should have between 0-30 characters and can not be empty"
+        }
+      }
+    },
     "ModelAndView": {
       "type": "object",
       "properties": {
@@ -1925,7 +2197,8 @@
       "type": "object",
       "properties": {
         "name": {
-          "type": "string"
+          "type": "string",
+          "description": "Name of subject should have between 0-30 characters and can not be empty"
         }
       }
     },

@@ -5,8 +5,9 @@ import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.krzysiek.rest.rest_app.entity.Student;
 import com.krzysiek.rest.rest_app.entity.Subject;
+import com.krzysiek.rest.rest_app.exception.ElementAlreadyExistsOnListException;
+import com.krzysiek.rest.rest_app.exception.ExceptionImpl;
 import com.krzysiek.rest.rest_app.repository.IStudentRepository;
-import com.krzysiek.rest.rest_app.exception.ElementNotFoundException;
 import com.krzysiek.rest.rest_app.repository.ISubjectRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
@@ -14,9 +15,9 @@ import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.Resource;
 
+import static com.krzysiek.rest.rest_app.exception.ExceptionImpl.*;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.*;
 
-import org.springframework.hateoas.mvc.ControllerLinkBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.json.MappingJacksonValue;
 import org.springframework.web.bind.annotation.*;
@@ -56,7 +57,7 @@ public class StudentResource {
         Optional<Student> studentOptional = studentRepository.findById(id);
         checkStudentExists(id, studentOptional);
         Resource<Student> resource = createLinkForStudent(studentOptional.get());
-        SimpleBeanPropertyFilter filter = SimpleBeanPropertyFilter.filterOutAllExcept("id","firstName", "secondName", "yearOfStudy", "birthday", "email");
+        SimpleBeanPropertyFilter filter = SimpleBeanPropertyFilter.filterOutAllExcept("id", "firstName", "secondName", "yearOfStudy", "birthday", "email");
         return getStudentMappingJacksonValue(resource, filter);
     }
 
@@ -79,31 +80,44 @@ public class StudentResource {
         return ResponseEntity.created(location).build();
     }
 
-//    @PostMapping("/id/subjects")
-//    public ResponseEntity<Object> addNewSubjectToStudent(@PathVariable Long id, @RequestBody Subject subject) {
-//        Optional<Student> studentOptional = studentRepository.findById(id);
-//        checkStudentExists(id, studentOptional);
-////        subject.getStudents().add(studentOptional.get());
-//        studentOptional.get().getSubjects().add(subject);
-////        subjectRepository.save(subject);
-//        studentRepository.save(studentOptional.get());
-//        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
-//                .path("/{id}")
-//                .buildAndExpand(subject.getId())
-//                .toUri();
-//        return ResponseEntity.created(location).build();
-//    }
-
-    // another possibility is 204 status (No content) return
+    // another possibility is return 204 status (No content)
     @DeleteMapping("/{id}")
     public void deleteStudentById(@PathVariable Long id) {
         studentRepository.deleteById(id);
     }
 
-    private void checkStudentExists(@PathVariable Long id, Optional<Student> studentOptional) {
-        if (!studentOptional.isPresent()) {
-            throw new ElementNotFoundException("Student with id: " + id + " not exists");
-        }
+    @DeleteMapping("/{id}/subjects/{subjectName}")
+    public void deleteSubjectStudent(@PathVariable Long id, @PathVariable String subjectName) {
+        Optional<Student> studentOptional = studentRepository.findById(id);
+        checkStudentExists(id, studentOptional);
+        Student student = studentOptional.get();
+
+        Optional<Subject> subjectOptional = subjectRepository.findSubjectByName(subjectName);
+        ExceptionImpl.checkSubjectExistsOnStudentList(subjectName, subjectOptional);
+
+        student.getSubjects().removeIf(subject -> subject.getName().equals(subjectName));
+        studentRepository.save(student);
+    }
+
+    @PutMapping("/{id}/subjects/{subjectName}")
+    public ResponseEntity<Object> addSubjectToStudent(@PathVariable Long id, @PathVariable String subjectName) {
+        Optional<Student> optionalStudent = studentRepository.findById(id);
+        checkStudentExists(id, optionalStudent);
+        Student student = optionalStudent.get();
+
+        Optional<Subject> subjectOptional = subjectRepository.findSubjectByName(subjectName);
+        checkSubjectExists(subjectName, subjectOptional);
+        Subject subject = subjectOptional.get();
+
+        Set<Subject> allStudentsSubject = student.getSubjects();
+        allStudentsSubject.forEach(studentSubject -> {
+            if (studentSubject.getName().equals(subjectName)) {
+                throw new ElementAlreadyExistsOnListException("Subject: " + subjectName + " already exists on the student's subjects list");
+            }
+        });
+        optionalStudent.get().getSubjects().add(subject);
+        studentRepository.save(student);
+        return ResponseEntity.noContent().build();
     }
 
     //    HATEOAS
