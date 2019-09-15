@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.krzysiek.rest.rest_app.entity.Student;
 import com.krzysiek.rest.rest_app.entity.Subject;
+import com.krzysiek.rest.rest_app.entity.Teacher;
 import com.krzysiek.rest.rest_app.exception.ElementAlreadyExistsOnListException;
 import com.krzysiek.rest.rest_app.exception.ExceptionImpl;
 import com.krzysiek.rest.rest_app.repository.IStudentRepository;
@@ -49,7 +50,7 @@ public class StudentResource {
                 .map(this::createStudentResource)
                 .collect(Collectors.toList());
         SimpleBeanPropertyFilter filter = SimpleBeanPropertyFilter.filterOutAllExcept("firstName", "secondName", "yearOfStudy");
-        return getStudentMappingJacksonValue(studentResources, filter);
+        return getObjectMappingJacksonValue("StudentsFilter", studentResources, filter);
     }
 
     @GetMapping("/{id}")
@@ -58,7 +59,7 @@ public class StudentResource {
         checkStudentExists(id, studentOptional);
         Resource<Student> resource = createLinkForStudent(studentOptional.get());
         SimpleBeanPropertyFilter filter = SimpleBeanPropertyFilter.filterOutAllExcept("id", "firstName", "secondName", "yearOfStudy", "birthday", "email");
-        return getStudentMappingJacksonValue(resource, filter);
+        return getObjectMappingJacksonValue("StudentsFilter", resource, filter);
     }
 
     @GetMapping("/{id}/subjects")
@@ -66,6 +67,19 @@ public class StudentResource {
         Optional<Student> studentOptional = studentRepository.findById(id);
         checkStudentExists(id, studentOptional);
         return studentOptional.get().getSubjects();
+    }
+
+    @GetMapping("/{id}/teachers")
+    public MappingJacksonValue getStudentTeachers(@PathVariable Long id) {
+        Optional<Student> studentOptional = studentRepository.findById(id);
+        checkStudentExists(id, studentOptional);
+        Student student = studentOptional.get();
+        Set<Resource<Teacher>> teachersList = student.getSubjects().stream()
+                .map(Subject::getTeacher)
+                .map(this::createTeacherResource)
+                .collect(Collectors.toSet());
+        SimpleBeanPropertyFilter teacherFilter = SimpleBeanPropertyFilter.filterOutAllExcept("firstName", "secondName");
+        return getObjectMappingJacksonValue("TeacherFilter", teachersList, teacherFilter);
     }
 
     @PostMapping()
@@ -124,8 +138,9 @@ public class StudentResource {
     private Resource<Student> createLinkForStudent(Student student) {
         Resource<Student> resource = new Resource<>(student);
         Link studentSubjects = linkTo(methodOn(this.getClass()).getAllSubjectsForStudent(student.getId())).withRel(getTranslateMessage("student.subjects.link"));
+        Link studentTeachers = linkTo(methodOn(this.getClass()).getStudentTeachers(student.getId())).withRel(getTranslateMessage("student.teachers.link"));
         Link linkToAllStudents = linkTo(methodOn(this.getClass()).getAllStudents()).withRel(getTranslateMessage("all.students.link"));
-        resource.add(studentSubjects, linkToAllStudents);
+        resource.add(studentSubjects, studentTeachers, linkToAllStudents);
         return resource;
     }
 
@@ -134,12 +149,17 @@ public class StudentResource {
         return new Resource<>(student, studentDetailsLink);
     }
 
+    private Resource<Teacher> createTeacherResource(Teacher teacher) {
+        Link teacherDetailsLink = linkTo(methodOn(TeacherResource.class).getTeacherById(teacher.getId())).withRel(getTranslateMessage("teacher.details.link"));
+        return new Resource<>(teacher, teacherDetailsLink);
+    }
+
     private String getTranslateMessage(String message) {
         return messageSource.getMessage(message, null, LocaleContextHolder.getLocale());
     }
 
-    private MappingJacksonValue getStudentMappingJacksonValue(Object resource, SimpleBeanPropertyFilter filter) {
-        FilterProvider filterProvider = new SimpleFilterProvider().addFilter("StudentsFilter", filter);
+    private MappingJacksonValue getObjectMappingJacksonValue(String filterName, Object resource, SimpleBeanPropertyFilter filter) {
+        FilterProvider filterProvider = new SimpleFilterProvider().addFilter(filterName, filter);
         MappingJacksonValue mappingJacksonValue = new MappingJacksonValue(resource);
         mappingJacksonValue.setFilters(filterProvider);
         return mappingJacksonValue;

@@ -10,7 +10,6 @@ import lombok.ToString;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.Size;
 import java.util.Set;
 
@@ -18,7 +17,7 @@ import java.util.Set;
 @Data
 @NoArgsConstructor
 @SequenceGenerator(name = "seq_subject", initialValue = 100, allocationSize = 1)
-@ApiModel
+@ApiModel(description = "Details about subject")
 public class Subject {
 
     @Id
@@ -33,9 +32,15 @@ public class Subject {
 
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
-    @ManyToMany(mappedBy = "subjects")
     @JsonIgnore
+    @ManyToMany(mappedBy = "subjects")
     Set<Student> students;
+
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Teacher teacher;
 
 
 }
