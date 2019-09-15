@@ -2,7 +2,7 @@
   "swagger": "2.0",
   "info": {
     "description": "Documentation for simple REST app",
-    "version": "1.4",
+    "version": "1.5",
     "title": "University API",
     "termsOfService": "urn:tos",
     "contact": {
@@ -25,6 +25,10 @@
     {
       "name": "student-resource",
       "description": "Student Resource"
+    },
+    {
+      "name": "teacher-resource",
+      "description": "Teacher Resource"
     },
     {
       "name": "web-mvc-links-handler",
@@ -1807,6 +1811,50 @@
         }
       }
     },
+    "/students/{id}/teachers": {
+      "get": {
+        "tags": [
+          "student-resource"
+        ],
+        "summary": "getStudentTeachers",
+        "operationId": "getStudentTeachersUsingGET",
+        "consumes": [
+          "application/xml",
+          "application/json"
+        ],
+        "produces": [
+          "application/xml",
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/MappingJacksonValue"
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
     "/subjects": {
       "get": {
         "tags": [
@@ -2015,6 +2063,174 @@
           }
         }
       }
+    },
+    "/teachers": {
+      "get": {
+        "tags": [
+          "teacher-resource"
+        ],
+        "summary": "getAllTeachers",
+        "operationId": "getAllTeachersUsingGET",
+        "consumes": [
+          "application/xml",
+          "application/json"
+        ],
+        "produces": [
+          "application/xml",
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/MappingJacksonValue"
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "teacher-resource"
+        ],
+        "summary": "addNewTeacher",
+        "operationId": "addNewTeacherUsingPOST",
+        "consumes": [
+          "application/xml",
+          "application/json"
+        ],
+        "produces": [
+          "application/xml",
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "teacher",
+            "description": "teacher",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Teacher"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object"
+            }
+          },
+          "201": {
+            "description": "Created"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/teachers/{id}": {
+      "get": {
+        "tags": [
+          "teacher-resource"
+        ],
+        "summary": "getTeacherById",
+        "operationId": "getTeacherByIdUsingGET",
+        "consumes": [
+          "application/xml",
+          "application/json"
+        ],
+        "produces": [
+          "application/xml",
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/MappingJacksonValue"
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/teachers/{id}/students": {
+      "get": {
+        "tags": [
+          "teacher-resource"
+        ],
+        "summary": "getTeacherStudents",
+        "operationId": "getTeacherStudentsUsingGET",
+        "consumes": [
+          "application/xml",
+          "application/json"
+        ],
+        "produces": [
+          "application/xml",
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/MappingJacksonValue"
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
     }
   },
   "definitions": {
@@ -2131,6 +2347,30 @@
         }
       }
     },
+    "Teacher": {
+      "type": "object",
+      "properties": {
+        "firstName": {
+          "type": "string",
+          "description": "First name should have between 0-15 characters and can not by empty"
+        },
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "secondName": {
+          "type": "string",
+          "description": "Second name should have between 0-20 characters and can not by empty"
+        },
+        "subjects": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Subject"
+          }
+        }
+      },
+      "description": "Details about teacher"
+    },
     "Map«string,Link»": {
       "type": "object",
       "additionalProperties": {
@@ -2200,7 +2440,8 @@
           "type": "string",
           "description": "Name of subject should have between 0-30 characters and can not be empty"
         }
-      }
+      },
+      "description": "Details about subject"
     },
     "FilterProvider": {
       "type": "object"
